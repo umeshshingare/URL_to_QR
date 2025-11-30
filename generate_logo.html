@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Code Extension Logo Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 QR Code Extension Logo Generator</h1>
+    <div class="info">
+        <p>This will generate beautiful logos for your extension. The logos will automatically download.</p>
+    </div>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <div id="status"></div>
+    
+    <script>
+        function generateLogo(size) {
+            const canvas = document.getElementById('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Create beautiful gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#0a58ca');
+            gradient.addColorStop(0.5, '#4a7cff');
+            gradient.addColorStop(1, '#6610f2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Add rounded corners
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.beginPath();
+            const radius = size * 0.2;
+            ctx.moveTo(radius, 0);
+            ctx.lineTo(size - radius, 0);
+            ctx.quadraticCurveTo(size, 0, size, radius);
+            ctx.lineTo(size, size - radius);
+            ctx.quadraticCurveTo(size, size, size - radius, size);
+            ctx.lineTo(radius, size);
+            ctx.quadraticCurveTo(0, size, 0, size - radius);
+            ctx.lineTo(0, radius);
+            ctx.quadraticCurveTo(0, 0, radius, 0);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.globalCompositeOperation = 'source-over';
+            
+            // Draw QR code pattern
+            const padding = size * 0.12;
+            const qrSize = size - (padding * 2);
+            const modules = 7;
+            const moduleSize = qrSize / modules;
+            
+            ctx.fillStyle = '#ffffff';
+            
+            // Draw position markers (corner squares)
+            function drawPositionMarker(x, y) {
+                const markerSize = moduleSize * 2.5;
+                // Outer white square
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(x, y, markerSize, markerSize);
+                // Inner colored square
+                ctx.fillStyle = '#0a58ca';
+                ctx.fillRect(x + moduleSize * 0.5, y + moduleSize * 0.5, moduleSize * 1.5, moduleSize * 1.5);
+                // Center white dot
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(x + moduleSize, y + moduleSize, moduleSize * 0.5, moduleSize * 0.5);
+            }
+            
+            // Top-left marker
+            drawPositionMarker(padding, padding);
+            // Top-right marker
+            drawPositionMarker(padding + qrSize - moduleSize * 2.5, padding);
+            // Bottom-left marker
+            drawPositionMarker(padding, padding + qrSize - moduleSize * 2.5);
+            
+            // Draw data modules (QR code pattern)
+            ctx.fillStyle = '#ffffff';
+            const dataPattern = [
+                [3, 0], [4, 0], [5, 0],
+                [0, 3], [0, 4], [0, 5],
+                [6, 3], [6, 4], [6, 5],
+                [3, 6], [4, 6], [5, 6],
+                [2, 2], [4, 2], [2, 4], [4, 4]
+            ];
+            
+            dataPattern.forEach(([x, y]) => {
+                ctx.fillRect(
+                    padding + x * moduleSize + moduleSize * 0.1,
+                    padding + y * moduleSize + moduleSize * 0.1,
+                    moduleSize * 0.8,
+                    moduleSize * 0.8
+                );
+            });
+            
+            // Add subtle shine/glow effect
+            const shineGradient = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+            shineGradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+            shineGradient.addColorStop(0.7, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = shineGradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Add border for definition
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = size * 0.02;
+            ctx.strokeRect(size * 0.05, size * 0.05, size * 0.9, size * 0.9);
+            
+            return canvas.toDataURL('image/png');
+        }
+        
+        function downloadImage(dataUrl, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function updateStatus(message) {
+            document.getElementById('status').innerHTML = '<p style="color: #0a58ca; font-weight: bold;">' + message + '</p>';
+        }
+        
+        // Generate all logo sizes
+        const sizes = [16, 48, 128];
+        let currentIndex = 0;
+        
+        function generateNext() {
+            if (currentIndex < sizes.length) {
+                const size = sizes[currentIndex];
+                updateStatus(`Generating icon${size}.png...`);
+                const dataUrl = generateLogo(size);
+                downloadImage(dataUrl, `icon${size}.png`);
+                currentIndex++;
+                setTimeout(generateNext, 800);
+            } else {
+                updateStatus('✅ All logos generated successfully! Check your downloads folder and replace the files in the icons/ folder.');
+            }
+        }
+        
+        // Start generation after a short delay
+        setTimeout(generateNext, 500);
+    </script>
+</body>
+</html>

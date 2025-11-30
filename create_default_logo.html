@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Default Logo</title>
+</head>
+<body>
+    <h1>Creating default extension logos...</h1>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <script>
+        function createLogo(size) {
+            const canvas = document.getElementById('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#0a58ca');
+            gradient.addColorStop(1, '#6610f2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Rounded corners
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.beginPath();
+            const radius = size * 0.2;
+            ctx.moveTo(radius, 0);
+            ctx.lineTo(size - radius, 0);
+            ctx.quadraticCurveTo(size, 0, size, radius);
+            ctx.lineTo(size, size - radius);
+            ctx.quadraticCurveTo(size, size, size - radius, size);
+            ctx.lineTo(radius, size);
+            ctx.quadraticCurveTo(0, size, 0, size - radius);
+            ctx.lineTo(0, radius);
+            ctx.quadraticCurveTo(0, 0, radius, 0);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.globalCompositeOperation = 'source-over';
+            
+            // Draw QR code pattern
+            const padding = size * 0.12;
+            const qrSize = size - (padding * 2);
+            const modules = 7;
+            const moduleSize = qrSize / modules;
+            
+            ctx.fillStyle = '#ffffff';
+            
+            // Position markers
+            function drawMarker(x, y) {
+                const ms = moduleSize * 2.5;
+                ctx.fillRect(x, y, ms, ms);
+                ctx.fillStyle = '#0a58ca';
+                ctx.fillRect(x + moduleSize * 0.5, y + moduleSize * 0.5, moduleSize * 1.5, moduleSize * 1.5);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(x + moduleSize, y + moduleSize, moduleSize * 0.5, moduleSize * 0.5);
+            }
+            
+            drawMarker(padding, padding);
+            drawMarker(padding + qrSize - moduleSize * 2.5, padding);
+            drawMarker(padding, padding + qrSize - moduleSize * 2.5);
+            
+            // Data modules
+            const pattern = [[3,0],[4,0],[5,0],[0,3],[0,4],[0,5],[6,3],[6,4],[6,5],[3,6],[4,6],[5,6],[2,2],[4,2],[2,4],[4,4]];
+            pattern.forEach(([x,y]) => {
+                ctx.fillRect(padding + x * moduleSize + moduleSize * 0.1, padding + y * moduleSize + moduleSize * 0.1, moduleSize * 0.8, moduleSize * 0.8);
+            });
+            
+            return canvas.toDataURL('image/png');
+        }
+        
+        function download(name, dataUrl) {
+            const a = document.createElement('a');
+            a.download = name;
+            a.href = dataUrl;
+            a.click();
+        }
+        
+        setTimeout(() => {
+            download('icon16.png', createLogo(16));
+            setTimeout(() => {
+                download('icon48.png', createLogo(48));
+                setTimeout(() => {
+                    download('icon128.png', createLogo(128));
+                    document.body.innerHTML = '<h1 style="color:green;">✓ Logos created! Check downloads folder.</h1>';
+                }, 300);
+            }, 300);
+        }, 500);
+    </script>
+</body>
+</html>
+

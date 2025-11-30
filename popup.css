@@ -1,0 +1,16 @@
+body{margin:0;padding:20px;width:380px;background:linear-gradient(135deg,#0a58ca,#6610f2);font-family:Poppins;color:#fff;}
+.outer{display:flex;align-items:center;justify-content:center;}
+.card{width:100%;border-radius:18px;padding:16px;background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);}
+.header{display:flex;gap:12px;align-items:center;justify-content:center;}
+.logo{width:44px;height:44px;border-radius:8px;background:#0a74ff;}
+.input-row{display:flex;gap:10px;margin-top:12px;}
+input{flex:1;padding:10px;border-radius:12px;border:none;background:rgba(255,255,255,0.12);color:#fff;}
+#refreshBtn{width:46px;border-radius:10px;border:none;background:#fff;color:#333;font-size:18px;}
+.qr-area{margin-top:14px;display:flex;flex-direction:column;align-items:center;position:relative;}
+.blur-container{width:300px;height:300px;border-radius:16px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);}
+.blur-container canvas{width:100%;height:100%;filter:blur(6px);}
+.generate{position:absolute;padding:12px 22px;border-radius:999px;border:none;background:#ffd54a;color:#222;font-weight:700;cursor:pointer;}
+.qr-canvas{display:none;border-radius:16px;margin-bottom:12px;}
+.qr-area .btn-row{margin-top:12px;width:100%;}
+button.primary{width:100%;padding:10px;border-radius:12px;border:none;background:#ffc107;color:#222;font-weight:700;}
+button.primary[disabled]{opacity:.6;}

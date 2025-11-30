@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QR Generator</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="outer">
+    <div class="card">
+      <div class="header">
+        <img src="icons/icon48.png" class="logo" />
+        <h1>QR Generator</h1>
+      </div>
+
+      <div class="input-row">
+        <input id="urlInput" type="text" readonly placeholder="Fetching URL..." />
+        <button id="refreshBtn">↻</button>
+      </div>
+
+      <div class="qr-area">
+        <div id="blurContainer" class="blur-container">
+          <canvas id="blurCanvas" width="300" height="300"></canvas>
+          <button id="generateBtn" class="generate">Generate</button>
+        </div>
+        <canvas id="qrCanvas" class="qr-canvas" width="300" height="300"></canvas>
+        <div class="btn-row">
+          <button id="downloadBtn" class="primary" disabled>Download</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="qrcode.min.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

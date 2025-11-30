@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fix Extension Logo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+            background: linear-gradient(135deg, #0a58ca, #6610f2);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px dashed white;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            margin: 10px 0;
+        }
+        input[type="file"]::file-selector-button {
+            background: white;
+            color: #0a58ca;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button {
+            background: #ffc107;
+            color: #222;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #ffd54a;
+        }
+        .preview {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .preview-item {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        canvas {
+            border: 2px solid white;
+            border-radius: 8px;
+            background: white;
+        }
+        .info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Fix Extension Logo</h1>
+        
+        <div class="section">
+            <h2>Step 1: Upload Your Logo Image</h2>
+            <p>Upload the neon QR code logo image you want to use</p>
+            <input type="file" id="imageInput" accept="image/*">
+        </div>
+
+        <div class="section" id="cropSection" style="display:none;">
+            <h2>Step 2: Adjust Crop (Optional)</h2>
+            <div class="info">
+                <label>Crop Size: <span id="cropValue">100</span>%</label>
+                <input type="range" id="cropSlider" min="50" max="150" value="100" style="width:100%;">
+                <label>X Position: <span id="xValue">0</span>%</label>
+                <input type="range" id="xSlider" min="-30" max="30" value="0" style="width:100%;">
+                <label>Y Position: <span id="yValue">0</span>%</label>
+                <input type="range" id="ySlider" min="-30" max="30" value="0" style="width:100%;">
+            </div>
+        </div>
+
+        <div class="section" id="previewSection" style="display:none;">
+            <h2>Step 3: Preview & Download</h2>
+            <div class="preview">
+                <div class="preview-item">
+                    <h3>16x16</h3>
+                    <canvas id="canvas16" width="16" height="16" style="width:64px;height:64px;"></canvas>
+                </div>
+                <div class="preview-item">
+                    <h3>48x48</h3>
+                    <canvas id="canvas48" width="48" height="48" style="width:96px;height:96px;"></canvas>
+                </div>
+                <div class="preview-item">
+                    <h3>128x128</h3>
+                    <canvas id="canvas128" width="128" height="128" style="width:128px;height:128px;"></canvas>
+                </div>
+            </div>
+            <button onclick="downloadAll()">📥 Download All Icons</button>
+            <div class="info">
+                <strong>Instructions:</strong><br>
+                1. Click "Download All Icons" above<br>
+                2. Move the downloaded files (icon16.png, icon48.png, icon128.png) to the <code>icons/</code> folder<br>
+                3. Replace the existing files<br>
+                4. Reload your extension in Chrome (chrome://extensions/)
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sourceImage = null;
+
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        sourceImage = img;
+                        document.getElementById('cropSection').style.display = 'block';
+                        updatePreviews();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function getCropParams() {
+            return {
+                crop: parseFloat(document.getElementById('cropSlider').value) / 100,
+                x: parseFloat(document.getElementById('xSlider').value),
+                y: parseFloat(document.getElementById('ySlider').value)
+            };
+        }
+
+        function drawIcon(canvas, size) {
+            if (!sourceImage) return;
+            
+            const ctx = canvas.getContext('2d');
+            const params = getCropParams();
+            
+            // Calculate crop
+            const sourceSize = Math.min(sourceImage.width, sourceImage.height) * params.crop;
+            const sourceX = (sourceImage.width - sourceSize) / 2 + (params.x * sourceImage.width / 100);
+            const sourceY = (sourceImage.height - sourceSize) / 2 + (params.y * sourceImage.height / 100);
+            
+            // Clear and draw
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, size, size);
+            ctx.drawImage(
+                sourceImage,
+                Math.max(0, sourceX), Math.max(0, sourceY),
+                Math.min(sourceSize, sourceImage.width - sourceX),
+                Math.min(sourceSize, sourceImage.height - sourceY),
+                0, 0, size, size
+            );
+        }
+
+        function updatePreviews() {
+            drawIcon(document.getElementById('canvas16'), 16);
+            drawIcon(document.getElementById('canvas48'), 48);
+            drawIcon(document.getElementById('canvas128'), 128);
+            document.getElementById('previewSection').style.display = 'block';
+        }
+
+        // Update sliders
+        ['cropSlider', 'xSlider', 'ySlider'].forEach(id => {
+            document.getElementById(id).addEventListener('input', function() {
+                const valueId = id.replace('Slider', 'Value');
+                document.getElementById(valueId).textContent = this.value;
+                updatePreviews();
+            });
+        });
+
+        function downloadIcon(size) {
+            const canvas = document.getElementById('canvas' + size);
+            const link = document.createElement('a');
+            link.download = `icon${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadAll() {
+            setTimeout(() => downloadIcon(16), 100);
+            setTimeout(() => downloadIcon(48), 300);
+            setTimeout(() => downloadIcon(128), 500);
+        }
+    </script>
+</body>
+</html>
+

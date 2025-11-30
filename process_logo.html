@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Logo Processor - Crop & Resize</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+            padding: 10px;
+            border: 2px dashed #0a58ca;
+            border-radius: 8px;
+            width: 100%;
+        }
+        .preview-area {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .preview-box {
+            text-align: center;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        .preview-box h3 {
+            margin: 0 0 10px 0;
+            color: #0a58ca;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+        }
+        button {
+            background: #0a58ca;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #6610f2;
+        }
+        .crop-controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 8px;
+        }
+        .crop-controls label {
+            display: block;
+            margin: 10px 0 5px 0;
+            font-weight: bold;
+        }
+        .crop-controls input[type="range"] {
+            width: 100%;
+        }
+        .crop-preview {
+            margin: 20px 0;
+            text-align: center;
+        }
+        #sourceCanvas {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Logo Processor - Crop & Generate Extension Icons</h1>
+    
+    <div class="container">
+        <h2>Step 1: Upload Your Logo Image</h2>
+        <input type="file" id="imageInput" accept="image/*">
+    </div>
+
+    <div class="container" id="cropContainer" style="display:none;">
+        <h2>Step 2: Crop & Adjust</h2>
+        <div class="crop-controls">
+            <label>Crop Size: <span id="cropSizeValue">100</span>%</label>
+            <input type="range" id="cropSize" min="50" max="150" value="100">
+            <label>X Offset: <span id="xOffsetValue">0</span></label>
+            <input type="range" id="xOffset" min="-50" max="50" value="0">
+            <label>Y Offset: <span id="yOffsetValue">0</span></label>
+            <input type="range" id="yOffset" min="-50" max="50" value="0">
+        </div>
+        <div class="crop-preview">
+            <canvas id="sourceCanvas"></canvas>
+        </div>
+    </div>
+
+    <div class="container" id="previewContainer" style="display:none;">
+        <h2>Step 3: Preview & Download</h2>
+        <div class="preview-area">
+            <div class="preview-box">
+                <h3>16x16</h3>
+                <canvas id="preview16" width="16" height="16"></canvas>
+                <br><br>
+                <button onclick="downloadLogo(16)">Download icon16.png</button>
+            </div>
+            <div class="preview-box">
+                <h3>48x48</h3>
+                <canvas id="preview48" width="48" height="48"></canvas>
+                <br><br>
+                <button onclick="downloadLogo(48)">Download icon48.png</button>
+            </div>
+            <div class="preview-box">
+                <h3>128x128</h3>
+                <canvas id="preview128" width="128" height="128"></canvas>
+                <br><br>
+                <button onclick="downloadLogo(128)">Download icon128.png</button>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="downloadAll()" style="background: #28a745; font-size: 18px; padding: 15px 30px;">
+                📥 Download All Logos
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let sourceImage = null;
+        let sourceCanvas = null;
+        let sourceCtx = null;
+
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        sourceImage = img;
+                        setupCanvas();
+                        document.getElementById('cropContainer').style.display = 'block';
+                        updatePreviews();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function setupCanvas() {
+            sourceCanvas = document.getElementById('sourceCanvas');
+            const maxSize = 400;
+            const scale = Math.min(maxSize / sourceImage.width, maxSize / sourceImage.height);
+            sourceCanvas.width = sourceImage.width * scale;
+            sourceCanvas.height = sourceImage.height * scale;
+            sourceCtx = sourceCanvas.getContext('2d');
+            sourceCtx.drawImage(sourceImage, 0, 0, sourceCanvas.width, sourceCanvas.height);
+        }
+
+        function getCropParams() {
+            const cropSize = parseFloat(document.getElementById('cropSize').value) / 100;
+            const xOffset = parseFloat(document.getElementById('xOffset').value);
+            const yOffset = parseFloat(document.getElementById('yOffset').value);
+            return { cropSize, xOffset, yOffset };
+        }
+
+        function drawCroppedImage(canvas, size) {
+            if (!sourceImage) return;
+            
+            const ctx = canvas.getContext('2d');
+            const { cropSize, xOffset, yOffset } = getCropParams();
+            
+            // Calculate source dimensions
+            const sourceSize = Math.min(sourceImage.width, sourceImage.height) * cropSize;
+            const sourceX = (sourceImage.width - sourceSize) / 2 + (xOffset * sourceImage.width / 100);
+            const sourceY = (sourceImage.height - sourceSize) / 2 + (yOffset * sourceImage.height / 100);
+            
+            // Clear and draw
+            ctx.clearRect(0, 0, size, size);
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, size, size);
+            ctx.drawImage(
+                sourceImage,
+                sourceX, sourceY, sourceSize, sourceSize,
+                0, 0, size, size
+            );
+        }
+
+        function updatePreviews() {
+            drawCroppedImage(document.getElementById('preview16'), 16);
+            drawCroppedImage(document.getElementById('preview48'), 48);
+            drawCroppedImage(document.getElementById('preview128'), 128);
+            document.getElementById('previewContainer').style.display = 'block';
+        }
+
+        // Update previews when controls change
+        ['cropSize', 'xOffset', 'yOffset'].forEach(id => {
+            document.getElementById(id).addEventListener('input', function() {
+                document.getElementById(id + 'Value').textContent = this.value;
+                updatePreviews();
+            });
+        });
+
+        function downloadLogo(size) {
+            const canvas = document.getElementById('preview' + size);
+            const link = document.createElement('a');
+            link.download = `icon${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadAll() {
+            setTimeout(() => downloadLogo(16), 100);
+            setTimeout(() => downloadLogo(48), 300);
+            setTimeout(() => downloadLogo(128), 500);
+        }
+    </script>
+</body>
+</html>
+
